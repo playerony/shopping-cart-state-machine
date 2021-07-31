@@ -1,13 +1,17 @@
 {
-  "extends": "airbnb/base",
+  "extends": "airbnb",
   "env": {
     "node": true,
     "browser": true
   },
+  "plugins": [
+    "react-hooks"
+  ],
   "overrides": [
     {
       "files": [
-        "*.js"
+        "*.js",
+        "*.jsx"
       ],
       "rules": {
         "wrap-iife": "off",
