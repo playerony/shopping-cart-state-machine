@@ -12,15 +12,11 @@ export function App() {
     send('FETCH');
   }, []);
 
-  function sendRetry() {
-    send('RETRY');
-  }
+  const sendRetry = () => send('RETRY');
 
-  function sendRefresh() {
-    send('REFRESH');
-  }
+  const sendRefresh = () => send('REFRESH');
 
-  const renderProductsList = () => {
+  function renderProductsList() {
     if (current.matches('loading')) {
       return <div>Ładowanie listy produktów...</div>;
     }
@@ -49,7 +45,7 @@ export function App() {
     }
 
     return null;
-  };
+  }
 
   function renderRefreshButton() {
     if (current.matches('loaded')) {
