@@ -1,0 +1,80 @@
+{
+  "name": "shopping-cart-state-machine",
+  "version": "1.0.0",
+  "description": "shopping cart state machine written with react and xstate",
+  "license": "MIT",
+  "author": "Paweł Wojtasiński",
+  "homepage": "https://github.com/playerony/shopping-cart-state-machine#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/playerony/shopping-cart-state-machine.git"
+  },
+  "bugs": {
+    "url": "https://github.com/playerony/shopping-cart-state-machine/issues"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run build:clean && npm run build:dist",
+    "build:clean": "rimraf dist",
+    "build:dist": "npm run webpack -- --env mode=production",
+    "check": "npm run lint && npm run stylelint && npm run build",
+    "commitlint": "commitlint -- --from=main",
+    "format": "prettier --write \"src/**/*\" \"public/**/*\"",
+    "lint": "eslint \"./src/**/*\"",
+    "lint:fix": "npm run lint -- --fix",
+    "prepare": "husky install",
+    "reinstall-deps": "bash ./scripts/reinstall-deps.sh",
+    "start": "npm run webpack -- serve --hot --open --port 3030 --env mode=development",
+    "stylelint": "npx stylelint \"**/*.css\"",
+    "stylelint:fix": "npm run stylelint -- --fix",
+    "webpack": "webpack"
+  },
+  "dependencies": {
+    "@xstate/react": "^1.5.1",
+    "copy-webpack-plugin": "^9.0.1",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "webpack-merge": "^5.8.0",
+    "xstate": "^4.23.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.14.8",
+    "@babel/preset-env": "^7.14.8",
+    "@commitlint/cli": "^13.1.0",
+    "@commitlint/config-conventional": "^13.1.0",
+    "babel-loader": "^8.2.2",
+    "css-loader": "^6.2.0",
+    "eslint": "^7.31.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-plugin-import": "^2.23.4",
+    "html-webpack-plugin": "^5.3.2",
+    "husky": "^7.0.1",
+    "lint-staged": "^11.1.1",
+    "prettier": "^2.3.2",
+    "prettier-package-json": "^2.6.0",
+    "rimraf": "^3.0.2",
+    "style-loader": "^3.2.1",
+    "stylelint": "^13.13.1",
+    "stylelint-config-standard": "^22.0.0",
+    "webpack": "^5.47.0",
+    "webpack-cli": "^4.7.2",
+    "webpack-dev-server": "^3.11.2"
+  },
+  "keywords": [
+    "cart",
+    "javascript",
+    "machine",
+    "react",
+    "shopping",
+    "state",
+    "state-machine",
+    "webpack",
+    "xstate"
+  ],
+  "husky": {
+    "hooks": {
+      "pre-push": "npm test",
+      "pre-commit": "lint-staged && npm test"
+    }
+  }
+}
