@@ -1,16 +1,19 @@
 import React from 'react';
+import debounce from 'lodash.debounce';
 import { useMachine } from '@xstate/react';
 
-import { ProductQuantity } from './product-quantity.component';
-
-import { productsMachine } from './products.machine';
+import { ProductList } from './parts';
+import { productsMachine } from './machine/products.machine';
 
 export function App() {
   const [current, send] = useMachine(productsMachine);
 
   const sendRetry = () => send('RETRY');
 
-  const onProductQuantityClick = (product) => (action) => () => send(action, { product });
+  const isChecking = current.matches('cart.increase') || current.matches('cart.decrease');
+
+  const onProductQuantityClick = (product) => (action) =>
+    debounce(() => send(action, { product }), 500);
 
   function renderProductsList() {
     if (current.matches('fetch-products.loading')) {
@@ -20,7 +23,7 @@ export function App() {
     if (current.matches('fetch-products.failure')) {
       return (
         <div>
-          Nie udało się pobrac listy produktów...
+          Nie udało się pobrać listy produktów...
           <button type="button" onClick={sendRetry}>
             Spróbuj pobrać listę produktów ponownie
           </button>
@@ -30,26 +33,36 @@ export function App() {
 
     if (current.context.products) {
       return (
-        <ul>
-          {React.Children.toArray(
-            current.context.products.map((_product) => (
-              <li className="row">
-                {`${_product.name}, cena: ${_product.price}zł`}
-                <ProductQuantity {..._product} onClick={onProductQuantityClick(_product)} />
-              </li>
-            )),
-          )}
-        </ul>
+        <ProductList
+          isChecking={isChecking}
+          products={current.context.products}
+          onProductQuantityClick={onProductQuantityClick}
+        />
       );
     }
 
     return null;
   }
 
+  function renderCartSum() {
+    if (!current.context.products) {
+      return null;
+    }
+
+    const cartSum = current.context.products.reduce((sum, _product) => {
+      const newSum = sum + _product.quantity * Number(_product.price);
+
+      return newSum;
+    }, 0);
+
+    return <h3>{`Suma zamówienia: ${cartSum.toFixed(2)}zł`}</h3>;
+  }
+
   return (
     <div className="container">
-      <h3>Lista produktów</h3>
+      <h1>Lista produktów</h1>
       {renderProductsList()}
+      {renderCartSum()}
     </div>
   );
 }

@@ -8,57 +8,22 @@ const assignProducts = assign({
     })),
 });
 
-const findProductIndexByPid = (products, pid) =>
+export const findProductIndexByPid = (products, pid) =>
   products.findIndex((_product) => _product.pid === pid);
 
-const changeProductQuantity = assign({
+const updateProductQuantity = assign({
   products: ({ products }, { data: { product, response } }) => {
     const copiedProducts = products.slice();
-
     const foundProductIndex = findProductIndexByPid(copiedProducts, product.pid);
     const foundProduct = copiedProducts[foundProductIndex];
 
-    if (response.isError) {
-      foundProduct.quantity = foundProduct.min;
-    } else {
-      foundProduct.quantity = product.quantity;
-    }
+    foundProduct.quantity = response.isError ? foundProduct.min : product.quantity;
 
     copiedProducts[foundProductIndex] = foundProduct;
 
     return copiedProducts;
   },
 });
-
-const cartManagerState = {
-  initial: 'idle',
-  states: {
-    idle: {
-      on: {
-        INCREASE_QUANTITY: 'increase',
-        DECREASE_QUANTITY: 'decrease',
-      },
-    },
-    increase: {
-      invoke: {
-        src: 'checkIncreasedProductQuantity',
-        onDone: {
-          target: 'idle',
-          actions: changeProductQuantity,
-        },
-      },
-    },
-    decrease: {
-      invoke: {
-        src: 'checkDecreasedProductQuantity',
-        onDone: {
-          target: 'idle',
-          actions: changeProductQuantity,
-        },
-      },
-    },
-  },
-};
 
 const fetchProductsState = {
   initial: 'loading',
@@ -74,7 +39,7 @@ const fetchProductsState = {
       },
     },
     loaded: {
-      ...cartManagerState,
+      type: 'final',
     },
     failure: {
       on: {
@@ -84,7 +49,37 @@ const fetchProductsState = {
   },
 };
 
-const checkProductQuantity =
+const cartState = {
+  initial: 'idle',
+  states: {
+    idle: {
+      on: {
+        INCREASE_QUANTITY: 'increase',
+        DECREASE_QUANTITY: 'decrease',
+      },
+    },
+    increase: {
+      invoke: {
+        src: 'checkIncreasedProductQuantity',
+        onDone: {
+          target: 'idle',
+          actions: updateProductQuantity,
+        },
+      },
+    },
+    decrease: {
+      invoke: {
+        src: 'checkDecreasedProductQuantity',
+        onDone: {
+          target: 'idle',
+          actions: updateProductQuantity,
+        },
+      },
+    },
+  },
+};
+
+const checkProductQuantityDecorator =
   (onQuantityChange) =>
   (_, { product }) => {
     const newQuantity = onQuantityChange(product.quantity);
@@ -101,7 +96,6 @@ const checkProductQuantity =
 export const productsMachine = createMachine(
   {
     initial: 'fetch-products',
-    id: 'products-machine',
     context: {
       products: null,
     },
@@ -109,13 +103,24 @@ export const productsMachine = createMachine(
       'fetch-products': {
         ...fetchProductsState,
       },
+      cart: {
+        ...cartState,
+      },
+    },
+    on: {
+      INCREASE_QUANTITY: {
+        target: '.cart.increase',
+      },
+      DECREASE_QUANTITY: {
+        target: '.cart.decrease',
+      },
     },
   },
   {
     services: {
-      checkIncreasedProductQuantity: checkProductQuantity((quantity) => quantity + 1),
-      checkDecreasedProductQuantity: checkProductQuantity((quantity) => quantity - 1),
       getProductsList: () => fetch('/api/cart').then((response) => response.json()),
+      checkIncreasedProductQuantity: checkProductQuantityDecorator((quantity) => quantity + 1),
+      checkDecreasedProductQuantity: checkProductQuantityDecorator((quantity) => quantity - 1),
     },
   },
 );
