@@ -13,11 +13,11 @@ export function App() {
   const onProductQuantityClick = (product) => (action) => () => send(action, { product });
 
   function renderProductsList() {
-    if (current.matches('loading')) {
+    if (current.matches('fetch-products.loading')) {
       return <div>Ładowanie listy produktów...</div>;
     }
 
-    if (current.matches('failure')) {
+    if (current.matches('fetch-products.failure')) {
       return (
         <div>
           Nie udało się pobrac listy produktów...
