@@ -1,20 +1,16 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useMachine } from '@xstate/react';
 
-import { productsMachine } from '../../machine/products.machine';
+import { ProductQuantity } from './product-quantity.component';
 
-import './app.styles.css';
+import { productsMachine } from './products.machine';
 
 export function App() {
   const [current, send] = useMachine(productsMachine);
 
-  useEffect(() => {
-    send('FETCH');
-  }, []);
-
   const sendRetry = () => send('RETRY');
 
-  const sendRefresh = () => send('REFRESH');
+  const onProductQuantityClick = (product) => (action) => () => send(action, { product });
 
   function renderProductsList() {
     if (current.matches('loading')) {
@@ -32,12 +28,15 @@ export function App() {
       );
     }
 
-    if (current.matches('loaded')) {
+    if (current.context.products) {
       return (
         <ul>
           {React.Children.toArray(
             current.context.products.map((_product) => (
-              <li className="row">{`${_product.name}, cena: ${_product.price}zł`}</li>
+              <li className="row">
+                {`${_product.name}, cena: ${_product.price}zł`}
+                <ProductQuantity {..._product} onClick={onProductQuantityClick(_product)} />
+              </li>
             )),
           )}
         </ul>
@@ -47,23 +46,8 @@ export function App() {
     return null;
   }
 
-  function renderRefreshButton() {
-    if (current.matches('loaded')) {
-      const formattedDate = new Date(current.context.lastUpdated).toISOString();
-
-      return (
-        <button type="button" onClick={sendRefresh}>
-          {`Odśwież listę produktów (ostatnio odświeżono ${formattedDate})`}
-        </button>
-      );
-    }
-
-    return null;
-  }
-
   return (
     <div className="container">
-      {renderRefreshButton()}
       <h3>Lista produktów</h3>
       {renderProductsList()}
     </div>
