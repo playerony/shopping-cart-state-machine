@@ -50,7 +50,8 @@ export function App() {
     }
 
     const cartSum = current.context.products.reduce((sum, _product) => {
-      const newSum = sum + _product.quantity * Number(_product.price);
+      const priceAsNumber = Number(_product.price);
+      const newSum = sum + _product.quantity * priceAsNumber;
 
       return newSum;
     }, 0);
