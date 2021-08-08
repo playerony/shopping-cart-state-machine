@@ -27,6 +27,7 @@ const updateProductQuantity = assign({
 
 const fetchProductsState = {
   initial: 'loading',
+  id: 'fetch-products',
   states: {
     loading: {
       invoke: {
@@ -47,10 +48,12 @@ const fetchProductsState = {
       },
     },
   },
+  onDone: 'manage-products',
 };
 
-const cartState = {
+const manageProductsState = {
   initial: 'idle',
+  id: 'manage-products',
   states: {
     idle: {
       on: {
@@ -95,25 +98,14 @@ const checkProductQuantityDecorator =
 
 export const productsMachine = createMachine(
   {
+    id: 'products',
     initial: 'fetch-products',
     context: {
       products: null,
     },
     states: {
-      'fetch-products': {
-        ...fetchProductsState,
-      },
-      cart: {
-        ...cartState,
-      },
-    },
-    on: {
-      INCREASE_QUANTITY: {
-        target: '.cart.increase',
-      },
-      DECREASE_QUANTITY: {
-        target: '.cart.decrease',
-      },
+      'fetch-products': fetchProductsState,
+      'manage-products': manageProductsState,
     },
   },
   {
