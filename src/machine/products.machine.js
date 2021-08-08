@@ -1,39 +1,15 @@
 import { assign, createMachine } from 'xstate';
 
-const assignProducts = assign({
-  products: (_, event) =>
-    event.data.map((_product) => ({
-      ..._product,
-      quantity: _product.min,
-    })),
-});
-
-export const findProductIndexByPid = (products, pid) =>
-  products.findIndex((_product) => _product.pid === pid);
-
-const updateProductQuantity = assign({
-  products: ({ products }, { data: { product, response } }) => {
-    const copiedProducts = products.slice();
-    const foundProductIndex = findProductIndexByPid(copiedProducts, product.pid);
-    const foundProduct = copiedProducts[foundProductIndex];
-
-    foundProduct.quantity = response.isError ? foundProduct.min : product.quantity;
-
-    copiedProducts[foundProductIndex] = foundProduct;
-
-    return copiedProducts;
-  },
-});
-
 const fetchProductsState = {
   initial: 'loading',
+  id: 'fetch-products',
   states: {
     loading: {
       invoke: {
         src: 'getProductsList',
         onDone: {
           target: 'loaded',
-          actions: assignProducts,
+          actions: 'assignProducts',
         },
         onError: 'failure',
       },
@@ -47,10 +23,12 @@ const fetchProductsState = {
       },
     },
   },
+  onDone: 'manage-products',
 };
 
-const cartState = {
+const manageProductsState = {
   initial: 'idle',
+  id: 'manage-products',
   states: {
     idle: {
       on: {
@@ -63,7 +41,7 @@ const cartState = {
         src: 'checkIncreasedProductQuantity',
         onDone: {
           target: 'idle',
-          actions: updateProductQuantity,
+          actions: 'updateProductQuantity',
         },
       },
     },
@@ -72,12 +50,15 @@ const cartState = {
         src: 'checkDecreasedProductQuantity',
         onDone: {
           target: 'idle',
-          actions: updateProductQuantity,
+          actions: 'updateProductQuantity',
         },
       },
     },
   },
 };
+
+export const findProductIndexByPid = (products, pid) =>
+  products.findIndex((_product) => _product.pid === pid);
 
 const checkProductQuantityDecorator =
   (onQuantityChange) =>
@@ -95,28 +76,39 @@ const checkProductQuantityDecorator =
 
 export const productsMachine = createMachine(
   {
+    id: 'products',
     initial: 'fetch-products',
     context: {
       products: null,
     },
     states: {
-      'fetch-products': {
-        ...fetchProductsState,
-      },
-      cart: {
-        ...cartState,
-      },
-    },
-    on: {
-      INCREASE_QUANTITY: {
-        target: '.cart.increase',
-      },
-      DECREASE_QUANTITY: {
-        target: '.cart.decrease',
-      },
+      'fetch-products': fetchProductsState,
+      'manage-products': manageProductsState,
     },
   },
   {
+    actions: {
+      assignProducts: assign({
+        products: (_, event) =>
+          event.data.map((_product) => ({
+            ..._product,
+            quantity: _product.min,
+          })),
+      }),
+      updateProductQuantity: assign({
+        products: ({ products }, { data: { product, response } }) => {
+          const copiedProducts = products.slice();
+          const foundProductIndex = findProductIndexByPid(copiedProducts, product.pid);
+          const foundProduct = copiedProducts[foundProductIndex];
+
+          foundProduct.quantity = response.isError ? foundProduct.min : product.quantity;
+
+          copiedProducts[foundProductIndex] = foundProduct;
+
+          return copiedProducts;
+        },
+      }),
+    },
     services: {
       getProductsList: () => fetch('/api/cart').then((response) => response.json()),
       checkIncreasedProductQuantity: checkProductQuantityDecorator((quantity) => quantity + 1),
