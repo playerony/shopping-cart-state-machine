@@ -10,7 +10,8 @@ export function App() {
 
   const sendRetry = () => send('RETRY');
 
-  const isChecking = current.matches('manage-products.increase') || current.matches('manage-products.decrease');
+  const isChecking =
+    current.matches('manage-products.increase') || current.matches('manage-products.decrease');
 
   const onProductQuantityClick = (product) => (action) =>
     debounce(() => send(action, { product }), 500);
